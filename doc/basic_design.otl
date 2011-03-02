@@ -24,14 +24,13 @@ Basic element sizing rules
 
 Basic "good" behaviour criteria
 	minimal
-	| to do one thing it is enough to do one thing.
+		to do one thing it is enough to do one thing.
 	stable
-	| an action will yield the same reaction in identical conditions
+		an action will yield the same reaction in identical conditions
 	symmetric
-	| symmetric behavior behaves in symmetric ways.
-	|
-	| example: resizing a window up or down does the same thing but in
-	| 		   different directions...
+		symmetric behavior behaves in symmetric ways.
+		| example: resizing a window up or down does the same thing but
+		| 		   in different directions...
 	...
 
 
