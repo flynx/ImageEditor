@@ -1,0 +1,23 @@
+Basic element sizing rules
+	grow to fill all available external space
+	shrink to cut all available internal space
+	sizing priority is determined by "degree of comfort"
+		degree of comfort is the position within the min, preferred or max size triplet
+		maximum comfort is the preferred size
+		all sizes are optional
+	size of "unsized" elements is sum of its content size
+	| as determined from the first two rules...
+	size of "unsized" elements without content is averaged from its neighbours
+	| NOTE: this is only when the system is stable (in comfort), 
+	| 		otherwise the unsized element occupies either zero size or 
+	| 		whatever space is left...
+	unsized elements have the same priority as neighbour elements in their comfort zone
+	unsized elements have less priority than elements outside of their comfort zone
+	all sizes are "soft", there is no way to set a "hard" size
+	resizing outside the min/max range will result in warnings
+	| error level for the developer and muted for the user.
+
+
+
+.
+| vim:set ts=4 sw=4 spell tw=72 :
