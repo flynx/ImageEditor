@@ -1,10 +1,14 @@
 Basic element sizing rules
 	grow to fill all available external space
 	shrink to cut all available internal space
+	elements can be explicitly sized, partially sized or unsized
 	sizing priority is determined by "degree of comfort"
 		degree of comfort is the position within the min, preferred or max size triplet
 		maximum comfort is the preferred size
 		all sizes are optional
+	the system is stable (in comfort) when the each element's comfort is on average the same
+	| NOTE: what does "on average" mean specifically should be
+	| 		determined experimentally.
 	size of "unsized" elements is sum of its content size
 	| as determined from the first two rules...
 	size of "unsized" elements without content is averaged from its neighbours
@@ -17,6 +21,18 @@ Basic element sizing rules
 	resizing outside the min/max range will result in warnings
 	| error level for the developer and muted for the user.
 
+
+Basic "good" behaviour criteria
+	minimal
+	| to do one thing it is enough to do one thing.
+	stable
+	| an action will yield the same reaction in identical conditions
+	symmetric
+	| symmetric behavior behaves in symmetric ways.
+	|
+	| example: resizing a window up or down does the same thing but in
+	| 		   different directions...
+	...
 
 
 .
