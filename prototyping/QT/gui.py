@@ -1,6 +1,7 @@
 
 
 from PyQt4 import QtCore, QtGui
+##!!! avoid * imports...
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -24,6 +25,8 @@ class Size:
 		self._maxHeight = maxHeight
 		self._prefWidth = prefWidth
 		self._prefHeight = prefHeight
+
+	##!!! do we need these as methods???
 	def setMinSize(self, width, height):
 		self._minWidth = width
 		self._minHeight = height
@@ -33,6 +36,7 @@ class Size:
 	def setPrefSize(self, width, height):
 		self._prefWidth = width
 		self._prefHeight = height
+	##!!! do we need these as methods???
 	def minWidth(self):
 		return self._minWidth
 	def minHeight(self):
@@ -95,6 +99,7 @@ class Container(Block):
 			Block.paintEvent(self, e)
 	def resizeEvent(self, e):
 		self.rearrange('Local')
+	##!!! revise...
 	def calcSize(self):
 		minWidth = 0
 		minHeight = 0
