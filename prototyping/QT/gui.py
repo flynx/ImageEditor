@@ -178,13 +178,9 @@ class Container(Block):
 
 		if type == "Horizontal":
 			dimention = 'width'
-			min_size = bsize.minWidth()
-			max_size = bsize.maxWidth()
 			pref_size = bsize.prefWidth()
 		else:
 			dimention = 'height'
-			min_size = bsize.minHeight()
-			max_size = bsize.maxHeight()
 			pref_size = bsize.prefHeight()
 		geom_dimention = getattr(geometry, dimention)
 
@@ -200,11 +196,13 @@ class Container(Block):
 				if getattr(bsize, 'pref' + dimention.title())() == 0:
 					diffMin += getattr(size, dimention)()
 				else:
-					diffMin += getattr(bsize, 'pref' + dimention.title())() - getattr(bsize, 'min' + dimention.title())()
+					diffMin += getattr(bsize, 'pref' + dimention.title())() \
+							- getattr(bsize, 'min' + dimention.title())()
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = getattr(bsize, 'pref' + dimention.title())() - getattr(bsize, 'min' + dimention.title())()
+				possible = getattr(bsize, 'pref' + dimention.title())() \
+						- getattr(bsize, 'min' + dimention.title())()
 				if getattr(bsize, 'pref' + dimention.title())() == 0:
 					possible = getattr(size, dimention)()
 				if diffMin > 0:
@@ -212,9 +210,11 @@ class Container(Block):
 				else:
 					delta = diffSize / len(self._order)
 				if getattr(bsize, 'pref' + dimention.title())() > 0:
-					getattr(size, 'set' + dimention.title())(getattr(bsize, 'pref' + dimention.title())() - delta)
+					getattr(size, 'set' + dimention.title())(
+							getattr(bsize, 'pref' + dimention.title())() - delta)
 				else:
-					getattr(size, 'set' + dimention.title())(getattr(size, dimention)() - delta)
+					getattr(size, 'set' + dimention.title())(
+							getattr(size, dimention)() - delta)
 				self._data[bname].resize(size)
 		##!!! we ignore the "==" case, is this correct?
 		elif pref_size < geom_dimention():
@@ -225,11 +225,13 @@ class Container(Block):
 				if getattr(size, 'pref' + dimention.title())() == 0:
 					diffMax += 1000
 				else:
-					diffMax += getattr(size, 'max' + dimention.title())() - getattr(size, 'pref' + dimention.title())()
+					diffMax += getattr(size, 'max' + dimention.title())() \
+							- getattr(size, 'pref' + dimention.title())()
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = getattr(bsize, 'max' + dimention.title())() - getattr(bsize, 'pref' + dimention.title())()
+				possible = getattr(bsize, 'max' + dimention.title())() \
+						- getattr(bsize, 'pref' + dimention.title())()
 				if getattr(bsize, 'pref' + dimention.title())() == 0:
 					possible = 1000
 				if diffMax > 0:
@@ -237,9 +239,11 @@ class Container(Block):
 				else:
 					delta = diffSize / len(self._order)
 				if getattr(bsize, 'pref' + dimention.title())() > 0:
-					getattr(size, 'set' + dimention.title())(getattr(bsize, 'pref' + dimention.title())() + delta)
+					getattr(size, 'set' + dimention.title())(
+							getattr(bsize, 'pref' + dimention.title())() + delta)
 				else:
-					getattr(size, 'set' + dimention.title())(getattr(size, dimention)() + delta)
+					getattr(size, 'set' + dimention.title())(
+							getattr(size, dimention)() + delta)
 				self._data[bname].resize(size)
 		x = 0
 		y = 0
