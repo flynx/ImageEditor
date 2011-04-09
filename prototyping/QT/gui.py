@@ -166,6 +166,7 @@ class Container(Block):
 	##!!! exhibits unstable behaviour:
 	##!!!	- shrink and grow are asymmetric
 	##!!!	- resizing in one step and in several smaller steps exhibit different results -- possible rounding error
+	##!!! still needs revision !!!##
 	def rearrange(self, type):
 		self.calcSize()
 		if self._parent != None and type == 'Parent':
@@ -182,69 +183,70 @@ class Container(Block):
 		else:
 			dimention = 'height'
 			pref_size = bsize.prefHeight()
-		geom_dimention = getattr(geometry, dimention)
 
-		##!!! abstract out all the getitem calls -- possibly via attr caching (???) !!!##
+		# define some helpers that make the code more
+		# readable...
+		_gets = lambda prefix: \
+				lambda obj, *p, **n: \
+					getattr(obj, prefix + dimention.title())(*p, **n)
+		prefs = _gets('pref')
+		mins = _gets('min')
+		maxs = _gets('max')
+		sets = _gets('set')
+		curs = lambda obj: getattr(obj, dimention)()
 
 		##!!! we ignore the "==" case, is this correct?
-		if pref_size > geom_dimention():
+		if pref_size > curs(geometry):
 			diffMin = 0
-			diffSize = pref_size - geom_dimention()
+			diffSize = pref_size - curs(geometry)
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				if getattr(bsize, 'pref' + dimention.title())() == 0:
-					diffMin += getattr(size, dimention)()
+				if prefs(bsize) == 0:
+					diffMin += curs(size)
 				else:
-					diffMin += getattr(bsize, 'pref' + dimention.title())() \
-							- getattr(bsize, 'min' + dimention.title())()
+					diffMin += prefs(bsize) - mins(bsize)
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = getattr(bsize, 'pref' + dimention.title())() \
-						- getattr(bsize, 'min' + dimention.title())()
-				if getattr(bsize, 'pref' + dimention.title())() == 0:
-					possible = getattr(size, dimention)()
+				possible = prefs(bsize) - mins(bsize)
+				if prefs(bsize) == 0:
+					possible = curs(size)
 				if diffMin > 0:
 					delta = diffSize * possible / diffMin
 				else:
 					delta = diffSize / len(self._order)
-				if getattr(bsize, 'pref' + dimention.title())() > 0:
-					getattr(size, 'set' + dimention.title())(
-							getattr(bsize, 'pref' + dimention.title())() - delta)
+				if prefs(bsize) > 0:
+					sets(size, prefs(bsize) - delta)
 				else:
-					getattr(size, 'set' + dimention.title())(
-							getattr(size, dimention)() - delta)
+					sets(size, curs(size) - delta)
 				self._data[bname].resize(size)
 		##!!! we ignore the "==" case, is this correct?
-		elif pref_size < geom_dimention():
+		elif pref_size < curs(geometry):
 			diffMax = 0
-			diffSize = geom_dimention() - pref_size
+			diffSize = curs(geometry) - pref_size
 			for bname in self._order:
 				size = self._data[bname].bsize()
-				if getattr(size, 'pref' + dimention.title())() == 0:
+				if prefs(size) == 0:
 					diffMax += 1000
 				else:
-					diffMax += getattr(size, 'max' + dimention.title())() \
-							- getattr(size, 'pref' + dimention.title())()
+					diffMax += maxs(size) - prefs(size)
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = getattr(bsize, 'max' + dimention.title())() \
-						- getattr(bsize, 'pref' + dimention.title())()
-				if getattr(bsize, 'pref' + dimention.title())() == 0:
+				possible = maxs(bsize) - prefs(bsize)
+				if prefs(bsize) == 0:
 					possible = 1000
 				if diffMax > 0:
 					delta = diffSize * possible / diffMax
 				else:
 					delta = diffSize / len(self._order)
-				if getattr(bsize, 'pref' + dimention.title())() > 0:
-					getattr(size, 'set' + dimention.title())(
-							getattr(bsize, 'pref' + dimention.title())() + delta)
+				if prefs(bsize) > 0:
+					sets(size, prefs(bsize) + delta)
 				else:
-					getattr(size, 'set' + dimention.title())(
-							getattr(size, dimention)() + delta)
+					sets(size, curs(size) + delta)
 				self._data[bname].resize(size)
+		##!!! was not revised yet...
 		x = 0
 		y = 0
 		for bname in self._order:
@@ -252,12 +254,10 @@ class Container(Block):
 			size = self._data[bname].size()
 			if type == "Horizontal":
 				x += size.width()
-##				print 'set height to:', geometry.height(), 'in', bname
 				size.setHeight(geometry.height())
 			if type == "Vertical":
 				y += size.height()
 				size.setWidth(geometry.width())
-##				print 'set width to:', geometry.width(), 'in', bname
 			self._data[bname].resize(size)
 
 
