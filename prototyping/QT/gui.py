@@ -195,7 +195,9 @@ class Container(Block):
 		sets = _gets('set')
 		curs = lambda obj: getattr(obj, dimention)()
 
-		##!!! we ignore the "==" case, is this correct?
+		##!!! need more commenting...
+		##!!! see if the folowing two branches can be folded without cluttering the code...
+		##!!! revise code to make it clearer...
 		if pref_size > curs(geometry):
 			diffMin = 0
 			diffSize = pref_size - curs(geometry)
@@ -221,7 +223,6 @@ class Container(Block):
 				else:
 					sets(size, curs(size) - delta)
 				self._data[bname].resize(size)
-		##!!! we ignore the "==" case, is this correct?
 		elif pref_size < curs(geometry):
 			diffMax = 0
 			diffSize = curs(geometry) - pref_size
@@ -246,6 +247,9 @@ class Container(Block):
 				else:
 					sets(size, curs(size) + delta)
 				self._data[bname].resize(size)
+		else:
+			##!!! this branch ('==') is ignored: is this correct??? (revise)
+			pass
 		##!!! was not revised yet...
 		x = 0
 		y = 0
