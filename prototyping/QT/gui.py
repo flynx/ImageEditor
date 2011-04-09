@@ -1,8 +1,12 @@
+
+
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
 import sys
 import random
+
 
 class Size:
 	def __init__(self):
@@ -12,7 +16,6 @@ class Size:
 		self._maxHeight = 0
 		self._prefWidth = 0
 		self._prefHeight = 0
-
 	def __init__(self, minWidth, minHeight, maxWidth, maxHeight, 
 			prefWidth, prefHeight):
 		self._minWidth = minWidth
@@ -21,36 +24,28 @@ class Size:
 		self._maxHeight = maxHeight
 		self._prefWidth = prefWidth
 		self._prefHeight = prefHeight
-
 	def setMinSize(self, width, height):
 		self._minWidth = width
 		self._minHeight = height
-
 	def setMaxSize(self, width, height):
 		self._maxWidth = width
 		self._maxHeight = height
-
 	def setPrefSize(self, width, height):
 		self._prefWidth = width
 		self._prefHeight = height
-
 	def minWidth(self):
 		return self._minWidth
-
 	def minHeight(self):
 		return self._minHeight
-
 	def maxWidth(self):
 		return self._maxWidth
-
 	def maxHeight(self):
 		return self._maxHeight
-
 	def prefWidth(self):
 		return self._prefWidth
-
 	def prefHeight(self):
 		return self._prefHeight
+
 
 class Block(QWidget):
 	def __init__(self, parent, bsize):
@@ -60,16 +55,15 @@ class Block(QWidget):
 			random.randint(128, 255), random.randint(128, 255)))
 		self._bsize = bsize
 		self.resize(bsize.prefWidth(), bsize.prefHeight())
-
 	def bsize(self):
 		return self._bsize
-
 	def paintEvent(self, e):
-#		print 'Block paint', self.geometry().width(), \
-#				self.geometry().height()
+##		print 'Block paint', self.geometry().width(), \
+##				self.geometry().height()
 		p = QPainter(self)
 		p.setBrush(self._brush)
 		p.drawRect(e.rect())
+
 
 class Container(Block):
 	_data = None
@@ -80,33 +74,27 @@ class Container(Block):
 		self._type = type
 		self._data = {}
 		self._order = []
-
 	def __getitem__(self, name):
 		return self._data[name]
-
 	def __setitem__(self, name, block):
 		self._data[name] = block
 		if name not in self._order:
 			self._order += [name]
 		self.calcSize()
 		self.rearrange('Parent')
-
 	def __delitem__(self, name):
 		self._data.destroy()
 		del self._data[name]
 		self._order.remove(name)
 		self.calcSize()
 		self.rearrange('Parent')
-
 	def paintEvent(self, e):
-#		print 'Container paint', len(self._data), self.geometry().width(), \
-#				self.geometry().height()
+##		print 'Container paint', len(self._data), self.geometry().width(), \
+##				self.geometry().height()
 		if len(self._data) == 0:
 			Block.paintEvent(self, e)
-
 	def resizeEvent(self, e):
 		self.rearrange('Local')
-
 	def calcSize(self):
 		minWidth = 0
 		minHeight = 0
@@ -173,9 +161,11 @@ class Container(Block):
 		bsize = Size(minWidth, minHeight, maxWidth, maxHeight, prefWidth,
 				prefHeight)
 		self._bsize = bsize
-#		print len(self._order)
-#		print minWidth, minHeight, maxWidth, maxHeight, prefWidth, prefHeight
-
+##		print len(self._order)
+##		print minWidth, minHeight, maxWidth, maxHeight, prefWidth, prefHeight
+	##!!! exhibits unstable behaviour:
+	##!!!	- shrink and grow are asymmetric
+	##!!!	- resizing in one step and in several smaller steps exhibit different results -- possible rounding error
 	def rearrange(self, type):
 		self.calcSize()
 		if self._parent != None and type == 'Parent':
@@ -185,115 +175,71 @@ class Container(Block):
 		type = self._type
 		geometry = self.geometry()
 		bsize = self._bsize
-		minWidth = bsize.minWidth()
-		minHeight = bsize.minHeight()
-		maxWidth = bsize.maxWidth()
-		maxHeight = bsize.maxHeight()
-		prefWidth = bsize.prefWidth()
-		prefHeight = bsize.prefHeight()
-#		print 'width:', prefWidth, geometry.width(), \
-#			'height:', prefHeight, geometry.height()
-		if type == "Horizontal" and prefWidth > geometry.width():
+
+		if type == "Horizontal":
+			dimention = 'width'
+			min_size = bsize.minWidth()
+			max_size = bsize.maxWidth()
+			pref_size = bsize.prefWidth()
+		else:
+			dimention = 'height'
+			min_size = bsize.minHeight()
+			max_size = bsize.maxHeight()
+			pref_size = bsize.prefHeight()
+		geom_dimention = getattr(geometry, dimention)
+
+		##!!! abstract out all the getitem calls -- possibly via attr caching (???) !!!##
+
+		##!!! we ignore the "==" case, is this correct?
+		if pref_size > geom_dimention():
 			diffMin = 0
-			diffSize = prefWidth - geometry.width()
+			diffSize = pref_size - geom_dimention()
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				if bsize.prefWidth() == 0:
-					diffMin += size.width()
+				if getattr(bsize, 'pref' + dimention.title())() == 0:
+					diffMin += getattr(size, dimention)()
 				else:
-					diffMin += bsize.prefWidth() - bsize.minWidth()
+					diffMin += getattr(bsize, 'pref' + dimention.title())() - getattr(bsize, 'min' + dimention.title())()
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = bsize.prefWidth() - bsize.minWidth()
-				if bsize.prefWidth() == 0:
-					possible = size.width()
+				possible = getattr(bsize, 'pref' + dimention.title())() - getattr(bsize, 'min' + dimention.title())()
+				if getattr(bsize, 'pref' + dimention.title())() == 0:
+					possible = getattr(size, dimention)()
 				if diffMin > 0:
 					delta = diffSize * possible / diffMin
 				else:
 					delta = diffSize / len(self._order)
-				if bsize.prefWidth() > 0:
-					size.setWidth(bsize.prefWidth() - delta)
+				if getattr(bsize, 'pref' + dimention.title())() > 0:
+					getattr(size, 'set' + dimention.title())(getattr(bsize, 'pref' + dimention.title())() - delta)
 				else:
-					size.setWidth(size.width() - delta)
+					getattr(size, 'set' + dimention.title())(getattr(size, dimention)() - delta)
 				self._data[bname].resize(size)
-		if type == "Horizontal" and prefWidth < geometry.width():
+		##!!! we ignore the "==" case, is this correct?
+		elif pref_size < geom_dimention():
 			diffMax = 0
-			diffSize = geometry.width() - prefWidth
+			diffSize = geom_dimention() - pref_size
 			for bname in self._order:
 				size = self._data[bname].bsize()
-				if size.prefWidth() == 0:
+				if getattr(size, 'pref' + dimention.title())() == 0:
 					diffMax += 1000
 				else:
-					diffMax += size.maxWidth() - size.prefWidth()
-#				print 'bname:', bname, 'diffMax:', diffMax
+					diffMax += getattr(size, 'max' + dimention.title())() - getattr(size, 'pref' + dimention.title())()
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = bsize.maxWidth() - bsize.prefWidth()
-				if bsize.prefWidth() == 0:
+				possible = getattr(bsize, 'max' + dimention.title())() - getattr(bsize, 'pref' + dimention.title())()
+				if getattr(bsize, 'pref' + dimention.title())() == 0:
 					possible = 1000
 				if diffMax > 0:
 					delta = diffSize * possible / diffMax
 				else:
 					delta = diffSize / len(self._order)
-				if bsize.prefWidth() > 0:
-					size.setWidth(bsize.prefWidth() + delta)
+				if getattr(bsize, 'pref' + dimention.title())() > 0:
+					getattr(size, 'set' + dimention.title())(getattr(bsize, 'pref' + dimention.title())() + delta)
 				else:
-					size.setWidth(size.width() + delta)
-				self._data[bname].resize(size)
-		if type == "Vertical" and prefHeight > geometry.height():
-			diffMin = 0
-			diffSize = prefHeight - geometry.height()
-			for bname in self._order:
-				bsize = self._data[bname].bsize()
-				size = self._data[bname].size()
-				if bsize.prefHeight() == 0:
-					diffMin += size.height()
-				else:
-					diffMin += bsize.prefHeight() - bsize.minHeight()
-			for bname in self._order:
-				bsize = self._data[bname].bsize()
-				size = self._data[bname].size()
-				possible = bsize.prefHeight() - bsize.minHeight()
-				if bsize.prefHeight() == 0:
-					possible = size.height()
-				if diffMin > 0:
-					delta = diffSize * possible / diffMin
-				else:
-					delta = diffSize / len(self._order)
-				print bname, bsize.prefHeight(), possible, delta
-				if bsize.prefHeight() > 0:
-					size.setHeight(bsize.prefHeight() - delta)
-				else:
-					size.setHeight(size.height() - delta)
-				self._data[bname].resize(size)
-		if type == "Vertical" and prefHeight < geometry.height():
-			diffMax = 0
-			diffSize = geometry.height() - prefHeight
-			for bname in self._order:
-				size = self._data[bname].bsize()
-				if size.prefHeight() == 0:
-					diffMax += 1000
-				else:
-					diffMax += size.maxHeight() - size.prefHeight()
-#				print 'bname:', bname, 'diffMax', diffMax, \
-#						'maxH:', size.maxHeight(), 'prefH:', size.prefHeight()
-			for bname in self._order:
-				bsize = self._data[bname].bsize()
-				size = self._data[bname].size()
-				possible = bsize.maxHeight() - bsize.prefHeight()
-				if bsize.prefHeight() == 0:
-					possible = 1000
-				if diffMax > 0:
-					delta = diffSize * possible / diffMax
-				else:
-					delta = diffSize / len(self._order)
-				if bsize.prefHeight() > 0:
-					size.setHeight(bsize.prefHeight() + delta)
-				else:
-					size.setHeight(size.height() + delta)
+					getattr(size, 'set' + dimention.title())(getattr(size, dimention)() + delta)
 				self._data[bname].resize(size)
 		x = 0
 		y = 0
@@ -302,22 +248,23 @@ class Container(Block):
 			size = self._data[bname].size()
 			if type == "Horizontal":
 				x += size.width()
-#				print 'set height to:', geometry.height(), 'in', bname
+##				print 'set height to:', geometry.height(), 'in', bname
 				size.setHeight(geometry.height())
 			if type == "Vertical":
 				y += size.height()
 				size.setWidth(geometry.width())
-#				print 'set width to:', geometry.width(), 'in', bname
+##				print 'set width to:', geometry.width(), 'in', bname
 			self._data[bname].resize(size)
+
 
 class GuiForm(Container):
 	def __init__(self):
 		Container.__init__(self, None, Size(100, 100, 1000, 800, 500, 400),
 				"Vertical")
-#		self["Block 0"] = Block(self, Size(100, 100, 1000, 800,
-#			500, 400))
-#		self["Block 1"] = Block(self, Size(100, 100, 1000, 800,
-#			500, 400))
+##		self["Block 0"] = Block(self, Size(100, 100, 1000, 800,
+##			500, 400))
+##		self["Block 1"] = Block(self, Size(100, 100, 1000, 800,
+##			500, 400))
 		self["Container 1"] = Container(self, Size(100, 100, 1000, 800,
 			550, 450), "Vertical")
 		self["Container 1"]["Container 1-1"] = Container(self["Container 1"],
@@ -333,9 +280,9 @@ class GuiForm(Container):
 				200, 175))
 		self["Container 1"]["Container 1-2"] = Container(self["Container 1"],
 				Size(100, 100, 250, 150, 200, 120), "Horizontal")
-#		self["Container 1"]["Container 1-2"]["Block 4"] = Block(
-#				self["Container 1"]["Container 1-2"], Size(500, 100, 750, 180,
-#				550, 150))
+##		self["Container 1"]["Container 1-2"]["Block 4"] = Block(
+##				self["Container 1"]["Container 1-2"], Size(500, 100, 750, 180,
+##				550, 150))
 		self["Container 1"]["Container 1-3"] = Container(self["Container 1"],
 				Size(500, 100, 750, 180, 550, 150), "Horizontal")
 		self["Container 1"]["Container 1-3"]["Block 5"] = Block(
@@ -351,3 +298,6 @@ if __name__ == "__main__":
 	w = GuiForm()
 	w.show()
 	sys.exit(app.exec_())
+
+
+
