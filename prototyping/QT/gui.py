@@ -10,15 +10,13 @@ import random
 
 
 class Size:
-	def __init__(self):
-		self._minWidth = 0
-		self._minHeight = 0
-		self._maxWidth = 0
-		self._maxHeight = 0
-		self._prefWidth = 0
-		self._prefHeight = 0
-	def __init__(self, minWidth, minHeight, maxWidth, maxHeight, 
-			prefWidth, prefHeight):
+	def __init__(self, 
+			minWidth=0, 
+			minHeight=0, 
+			maxWidth=0, 
+			maxHeight=0, 
+			prefWidth=0, 
+			prefHeight=0):
 		self._minWidth = minWidth
 		self._minHeight = minHeight
 		self._maxWidth = maxWidth
