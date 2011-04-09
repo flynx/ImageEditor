@@ -182,73 +182,73 @@ class Container(Block):
 
 		if type == "Horizontal":
 			dimention = 'width'
-			pref_size = bsize.prefWidth()
+			orig_pref_size = bsize.prefWidth()
 		else:
 			dimention = 'height'
-			pref_size = bsize.prefHeight()
+			orig_pref_size = bsize.prefHeight()
 
 		# define some helpers that make the code more
 		# readable...
 		_gets = lambda prefix: \
 				lambda obj, *p, **n: \
 					getattr(obj, prefix + dimention.title())(*p, **n)
-		prefs = _gets('pref')
-		mins = _gets('min')
-		maxs = _gets('max')
-		sets = _gets('set')
-		curs = lambda obj: getattr(obj, dimention)()
+		pref_size = _gets('pref')
+		set_size = _gets('set')
+		cur_size = lambda obj: getattr(obj, dimention)()
 
 		##!!! need more commenting...
 		##!!! see if the folowing two branches can be folded without cluttering the code...
 		##!!! revise code to make it clearer...
-		if pref_size > curs(geometry):
+		if orig_pref_size > cur_size(geometry):
+			min_size = _gets('min')
 			diffMin = 0
-			diffSize = pref_size - curs(geometry)
+			diffSize = orig_pref_size - cur_size(geometry)
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				if prefs(bsize) == 0:
-					diffMin += curs(size)
+				if pref_size(bsize) == 0:
+					diffMin += cur_size(size)
 				else:
-					diffMin += prefs(bsize) - mins(bsize)
+					diffMin += pref_size(bsize) - min_size(bsize)
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = prefs(bsize) - mins(bsize)
-				if prefs(bsize) == 0:
-					possible = curs(size)
+				possible = pref_size(bsize) - min_size(bsize)
+				if pref_size(bsize) == 0:
+					possible = cur_size(size)
 				if diffMin > 0:
 					delta = diffSize * possible / diffMin
 				else:
 					delta = diffSize / len(self._order)
-				if prefs(bsize) > 0:
-					sets(size, prefs(bsize) - delta)
+				if pref_size(bsize) > 0:
+					set_size(size, pref_size(bsize) - delta)
 				else:
-					sets(size, curs(size) - delta)
+					set_size(size, cur_size(size) - delta)
 				self._data[bname].resize(size)
-		elif pref_size < curs(geometry):
+		elif orig_pref_size < cur_size(geometry):
+			max_size = _gets('max')
 			diffMax = 0
-			diffSize = curs(geometry) - pref_size
+			diffSize = cur_size(geometry) - orig_pref_size
 			for bname in self._order:
 				size = self._data[bname].bsize()
-				if prefs(size) == 0:
+				if pref_size(size) == 0:
 					diffMax += 1000
 				else:
-					diffMax += maxs(size) - prefs(size)
+					diffMax += max_size(size) - pref_size(size)
 			for bname in self._order:
 				bsize = self._data[bname].bsize()
 				size = self._data[bname].size()
-				possible = maxs(bsize) - prefs(bsize)
-				if prefs(bsize) == 0:
+				possible = max_size(bsize) - pref_size(bsize)
+				if pref_size(bsize) == 0:
 					possible = 1000
 				if diffMax > 0:
 					delta = diffSize * possible / diffMax
 				else:
 					delta = diffSize / len(self._order)
-				if prefs(bsize) > 0:
-					sets(size, prefs(bsize) + delta)
+				if pref_size(bsize) > 0:
+					set_size(size, pref_size(bsize) + delta)
 				else:
-					sets(size, curs(size) + delta)
+					set_size(size, cur_size(size) + delta)
 				self._data[bname].resize(size)
 		else:
 			##!!! this branch ('==') is ignored: is this correct??? (revise)
