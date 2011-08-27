@@ -5,7 +5,7 @@ __version__ = '''0.0.01'''
 #-----------------------------------------------------------------------
 
 from codec import PILJpegCodec
-from filter import CropFilter, InvertFilter
+from filter import CropFilter, InvertFilter, BlendFilter
 import pickle
 
 #-----------------------------------------------------------------------
@@ -21,13 +21,18 @@ def test_1():
 	f2 = CropFilter()
 	f2.set_size((1.0, 0.5))
 	
+	f3 = BlendFilter()
+	
 	in_codec.load(in_path)
 	f1.set_input(in_codec)
 	f2.set_input(f1)
+
+	f3.set_inputs(in_codec, f2)
+	
 #	f1.set_visible(False)
 #	f2.set_visible(False)		
 
-	out_codec.set_data(f2.get_data())
+	out_codec.set_data(f3.get_data())
 	out_codec.save(out_path)
 #-----------------------------------------------------------------------
 def test_2():
@@ -62,8 +67,30 @@ def test_3():
 	out_codec.set_data(input.get_data())
 	out_codec.save(out_path)
 #-----------------------------------------------------------------------
+def test_4():
+	in_path = 'test_image.jpg'
+	in_path_2 = 'test_image_2.jpg'
+	out_path = 'test_image_out.jpg'
+
+	in_codec = PILJpegCodec()
+	in_codec_2 = PILJpegCodec()
+	out_codec = PILJpegCodec()
+
+	in_codec.load(in_path)
+	in_codec_2.load(in_path_2)
+
+	f1 = BlendFilter('screen')	
+#	f1 = BlendFilter('multiply')
+	
+	f1.set_inputs(in_codec, in_codec_2)
+	f1.set_input(in_codec, 1) # example of changing second input
+	
+	out_codec.set_data(f1.get_data())
+	out_codec.save(out_path)
+#-----------------------------------------------------------------------
 if __name__ == '__main__':
 #	test_1()
-	test_2()
-	test_3()
+#	test_2()
+#	test_3()
+	test_4()
 #=======================================================================

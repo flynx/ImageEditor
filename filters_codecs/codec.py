@@ -25,10 +25,11 @@ class Codec(object):
 #-----------------------------------------------------------------------
 class PILJpegCodec(Codec):
 	'''
-	Codec which works with jpeg images using PIL.Image 
+	Codec which works with jpeg images using PIL.Image
 	'''
 	def load(self, img_path):
-		self.data = PILImageData(Image.open(img_path))
+		img_rgb = Image.open(img_path).convert('RGB')
+		self.data = PILImageData(img_rgb)
 	def save(self, img_out_path):
 		self.data.image.save(img_out_path, 'JPEG')
 
